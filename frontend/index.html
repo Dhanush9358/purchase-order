@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Purchase Order Generator</title>
+  <style>
+    body { font-family: Arial; font-size: 14px; }
+    input, textarea { width: 300px; margin-bottom: 6px; }
+    table { border-collapse: collapse; margin-top: 10px; }
+    td, th { border: 1px solid #000; padding: 6px; }
+  </style>
+</head>
+<body>
+
+<h2>Generate Purchase Order</h2>
+
+<!-- Dates -->
+<label>Order Date</label><br>
+<input id="order_date" placeholder="DD/MM/YYYY"><br>
+
+<label>Delivery Date</label><br>
+<input id="delivery_date" placeholder="DD/MM/YYYY"><br><br>
+
+<hr>
+
+<!-- Bill From -->
+<h3>Bill From</h3>
+<input id="bf_name" placeholder="Name"><br>
+<textarea id="bf_address" placeholder="Address"></textarea><br>
+<input id="bf_state" placeholder="State"><br>
+<input id="bf_gstin" placeholder="GSTIN"><br>
+
+<hr>
+
+<!-- Bill To -->
+<h3>Bill To</h3>
+<input id="bt_name" placeholder="Name"><br>
+<textarea id="bt_address" placeholder="Address"></textarea><br>
+<input id="bt_state" placeholder="State"><br>
+
+<hr>
+
+<!-- Ship To -->
+<h3>Ship To</h3>
+<input id="st_name" placeholder="Name"><br>
+<textarea id="st_address" placeholder="Address"></textarea><br>
+<input id="st_state" placeholder="State"><br>
+
+<hr>
+
+<!-- Items -->
+<h3>Products</h3>
+
+<table id="items">
+  <tr>
+    <th>Product Name</th>
+    <th>HSN</th>
+    <th>Qty</th>
+    <th>Rate</th>
+    <th>IGST %</th>
+    <th>Action</th>
+  </tr>
+</table>
+
+<button onclick="addRow()">Add Product</button>
+
+<br><br>
+
+<button onclick="generatePDF()">Download PDF</button>
+
+<script>
+function addRow() {
+  const table = document.getElementById("items");
+  const row = table.insertRow();
+
+  row.innerHTML = `
+    <td><input></td>
+    <td><input></td>
+    <td><input type="number"></td>
+    <td><input type="number"></td>
+    <td><input type="number"></td>
+    <td><button onclick="this.parentElement.parentElement.remove()">Remove</button></td>
+  `;
+}
+
+function generatePDF() {
+
+  const rows = document.querySelectorAll("#items tr");
+  let items = [];
+
+  rows.forEach((row, index) => {
+    if (index === 0) return;
+    const inputs = row.querySelectorAll("input");
+    items.push({
+      name: inputs[0].value,
+      hsn: inputs[1].value,
+      qty: Number(inputs[2].value),
+      rate: Number(inputs[3].value),
+      gst: Number(inputs[4].value)
+    });
+  });
+
+  const payload = {
+    order_date: document.getElementById("order_date").value,
+    delivery_date: document.getElementById("delivery_date").value,
+
+    bill_from: {
+      name: document.getElementById("bf_name").value,
+      address: document.getElementById("bf_address").value,
+      state: document.getElementById("bf_state").value,
+      gstin: document.getElementById("bf_gstin").value
+    },
+
+    bill_to: {
+      name: document.getElementById("bt_name").value,
+      address: document.getElementById("bt_address").value,
+      state: document.getElementById("bt_state").value
+    },
+
+    ship_to: {
+      name: document.getElementById("st_name").value,
+      address: document.getElementById("st_address").value,
+      state: document.getElementById("st_state").value
+    },
+
+    items: items
+  };
+
+  fetch("/generate-pdf", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.blob())
+  .then(blob => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "purchase_order.pdf";
+    a.click();
+  })
+  .catch(() => alert("PDF generation failed"));
+}
+</script>
+
+</body>
+</html>
