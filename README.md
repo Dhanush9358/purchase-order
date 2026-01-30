@@ -102,23 +102,41 @@ Why Playwright?
 
 
 purchase-order-pdf/
+
 │
+
 ├── backend/
+
 │   ├── main.py
+
 │   ├── pdf_generator.py
+
 │   ├── schemas.py
+
 │   ├── utils.py
+
 │   └── templates/
+
 │       └── purchase_order.html
+
 │
+
 ├── frontend/
+
 │   └── index.html
+
 │
+
 ├── static/
+
 │   ├── logo.png
+
 │   └── signature.png
+
 │
+
 ├── requirements.txt
+
 └── README.md
 
 
